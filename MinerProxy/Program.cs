@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using MinerProxy.Network;
 using MinerProxy.Miners;
 using static MinerProxy.Donations;
+using System.Reflection;
 
 namespace MinerProxy
 {
@@ -32,6 +33,8 @@ namespace MinerProxy
 
         static void Main(string[] args)
         {
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
+
             Logger.MinerProxyHeader();
 
             // Load and process settings in the Settings class
@@ -82,10 +85,12 @@ namespace MinerProxy
             {
                 try
                 {
-                    webSock = new HttpServer(settings.webSocketPort);
-                    webSock.RootPath = Directory.GetCurrentDirectory() + @"\web\";
-                    Directory.CreateDirectory(webSock.RootPath);
-                    if (settings.debug) Logger.LogToConsole(string.Format("Web root: {0}", webSock.RootPath), "MinerProxy");
+                    webSock = new HttpServer(settings.webSocketPort)
+                    {
+                        DocumentRootPath = Directory.GetCurrentDirectory() + @"\web\"
+                    };
+                    Directory.CreateDirectory(webSock.DocumentRootPath);
+                    if (settings.debug) Logger.LogToConsole(string.Format("Web root: {0}", webSock.DocumentRootPath), "MinerProxy");
 
                     webSock.OnGet += new EventHandler<HttpRequestEventArgs>(Web.WebIndex.OnGet);
                     webSock.AddWebSocketService<WebIndex>("/");
